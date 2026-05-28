@@ -210,6 +210,9 @@ public class CompanyEmployeeServiceImpl implements CompanyEmployeeService {
 
             if (companyEmployee.getEmployeeType() != null) {
                 companyEmployeeDto.setEmployeeTypeId(companyEmployee.getEmployeeType().getId());
+//                System.out.printf("======= companyEmployee.getEmployeeType() ======"+companyEmployee.getEmployeeType());
+                EmployeeType employeeType = this.employeeTypeRepository.findById(companyEmployee.getEmployeeType().getId()).orElseThrow(() -> new RuntimeException("Employee type not found"));
+                companyEmployeeDto.setEmployeeTypeName(employeeType.getName());
             }
 
             if (companyEmployee.getDob() != null) {
@@ -247,6 +250,7 @@ public class CompanyEmployeeServiceImpl implements CompanyEmployeeService {
             return companyEmployeeDto;
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

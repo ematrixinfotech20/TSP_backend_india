@@ -1,7 +1,6 @@
 package com.timesheetspro_api.common.model.department;
 
 import com.timesheetspro_api.common.model.companyDetails.CompanyDetails;
-import com.timesheetspro_api.common.model.locations.Locations;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -52,6 +52,7 @@ public class CompanyEmployeeDto {
     private String departmentName;
 
     private int employeeTypeId;
+    private String employeeTypeName;
 
     private String payPeriod;
     private String 	payClass;

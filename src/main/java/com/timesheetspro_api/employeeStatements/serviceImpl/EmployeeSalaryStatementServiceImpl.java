@@ -14,7 +14,6 @@ import com.timesheetspro_api.common.model.CompanyEmployee.CompanyEmployee;
 import com.timesheetspro_api.common.model.UserInOut.UserInOut;
 import com.timesheetspro_api.common.model.attendancePenaltyRules.AttendancePenaltyRules;
 import com.timesheetspro_api.common.model.deductions.Deductions;
-import com.timesheetspro_api.common.model.holidayTemplates.HolidayTemplates;
 import com.timesheetspro_api.common.model.overtimeRules.OvertimeRules;
 import com.timesheetspro_api.common.model.weeklyOff.WeeklyOff;
 import com.timesheetspro_api.common.repository.DeductionsRepository;
@@ -36,7 +35,6 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @Service(value = "EmployeeSalaryStatementService")
@@ -222,7 +220,7 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
         // Remove any day the employee actually worked from the paid off-days pool.
         // E.g., If configPaidOffDays has 5 days, and actualWorkDays contains 1 of those days,
         // it removes that 1 day, leaving 4 totalPaidDaysCount.
-//        configPaidOffDays.removeAll(actualWorkDays);
+        configPaidOffDays.removeAll(actualWorkDays);
 
         int totalPaidDaysCount = configPaidOffDays.size(); // This will now correctly be 4
 
@@ -247,6 +245,7 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
             double workedHoursRaw = netWorkedMinutes / 60.0;
             double workedHours = Math.round(workedHoursRaw * 100.0) / 100.0;
             double hourlyRate = companyEmployee.getHourlyRate();
+            dto.setTotalWorkingHours(workedHours);
             double payForWorked = workedHours * hourlyRate;
             baseSalary = (int) payForWorked;
         } else {
@@ -260,7 +259,6 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
             // Determine if this is a full month (1st to last day of that month)
             boolean isFullMonth = (startLocal.getDayOfMonth() == 1) &&
                     (endLocal.equals(startLocal.withDayOfMonth(startLocal.lengthOfMonth())));
-
             // Re‑calculate paid off‑days (weekly offs + holidays) for this period
             Set<LocalDate> paidOffDays = calculatePaidDays(startDate, endDate,
                     companyEmployee.getWeeklyOff(), holidayDates);
@@ -291,7 +289,6 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
         }
         int otherDeductions = calculateCanteenDeductions(companyEmployee, dailyWorkedMinutes, actualWorkDays) + penaltyAmount;
         int totalEarnings = baseSalary + otAmountFinal + totalAllowance;
-
         int ptAmount = Boolean.TRUE.equals(companyEmployee.getIsPt()) ? (companyEmployee.getPtAmount() != null ? companyEmployee.getPtAmount() : 0) : 0;
         dto.setPtAmount(ptAmount);
 

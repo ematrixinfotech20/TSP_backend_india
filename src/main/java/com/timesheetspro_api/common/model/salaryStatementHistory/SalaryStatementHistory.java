@@ -90,6 +90,9 @@ public class SalaryStatementHistory {
     @Column(name = "working_days")
     private Integer totalWorkingDays;
 
+    @Column(name = "working_hours")
+    private Double totalWorkingHours;
+
     @Column(name = "total_days")
     private Integer totalDays;
 
