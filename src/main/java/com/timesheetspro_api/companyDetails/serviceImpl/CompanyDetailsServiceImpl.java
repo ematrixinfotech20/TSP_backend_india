@@ -9,21 +9,17 @@ import com.timesheetspro_api.common.dto.location.LocationDto;
 import com.timesheetspro_api.common.exception.GlobalException;
 import com.timesheetspro_api.common.model.CompanyEmployee.CompanyEmployee;
 import com.timesheetspro_api.common.model.companyDetails.CompanyDetails;
-import com.timesheetspro_api.common.model.companyEmployeeRoles.CompanyEmployeeRoles;
 import com.timesheetspro_api.common.model.companyTheme.CompanyTheme;
 import com.timesheetspro_api.common.model.locations.Locations;
 import com.timesheetspro_api.common.repository.company.CompanyDetailsRepository;
 import com.timesheetspro_api.common.repository.company.CompanyEmployeeRepository;
 import com.timesheetspro_api.common.repository.company.CompanyThemeRepository;
 import com.timesheetspro_api.common.repository.company.LocationsRepository;
-import com.timesheetspro_api.common.repository.RolesRepository;
 import com.timesheetspro_api.common.service.CommonService;
 import com.timesheetspro_api.common.specification.CompanySpecification;
 import com.timesheetspro_api.companyDetails.service.CompanyDetailsService;
 import com.timesheetspro_api.companyEmployee.service.CompanyEmployeeService;
 import com.timesheetspro_api.companyEmployeeRole.service.CompanyEmployeeRoleService;
-import com.timesheetspro_api.companyTheme.service.CompanyThemeService;
-import com.timesheetspro_api.locations.service.LocationService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,12 +49,6 @@ public class CompanyDetailsServiceImpl implements CompanyDetailsService {
 
     @Autowired
     private LocationsRepository locationsRepository;
-
-    @Autowired
-    private LocationService locationService;
-
-    @Autowired
-    private RolesRepository rolesRepository;
 
     @Autowired
     private CompanyEmployeeRepository companyEmployeeRepository;
