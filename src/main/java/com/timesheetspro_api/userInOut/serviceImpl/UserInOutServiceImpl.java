@@ -1262,60 +1262,6 @@ public class UserInOutServiceImpl implements UserInOutService {
         }
     }
 
-//    private boolean handleTimeOutUpdate(CompanyEmployee employee, UserInOut existingRecord,
-//                                        Date timeOut, Integer locationId, Integer companyId) {
-//
-//        // 2️⃣ For Hourly shifts, check if autoTimeInAfter is present
-//        String autoTimeInAfter = employee.getCompanyDetails().getAutoTimeInAfterHours();
-//        if (autoTimeInAfter == null || autoTimeInAfter.isEmpty()) {
-//            // No gap limit defined → just update
-//            existingRecord.setTimeOut(timeOut);
-//            userInOutRepository.save(existingRecord);
-//            return true;
-//        }
-//
-//        // 3️⃣ Gap logic for Hourly shifts with autoTimeInAfter
-//        Instant timeOutInstant = timeOut.toInstant();
-//        LocalDateTime timeOutUtc = LocalDateTime.ofInstant(timeOutInstant, ZoneOffset.UTC);
-//
-//        // Get shift start/end times (assumed stored as UTC timestamps, but treated as local time)
-//        LocalTime shiftStart = employee.getCompanyShift().getStartTime().toLocalDateTime().toLocalTime();
-//        LocalTime shiftEnd = employee.getCompanyShift().getEndTime().toLocalDateTime().toLocalTime();
-//
-//        LocalDate date = timeOutUtc.toLocalDate();
-//        LocalDateTime shiftStartDateTime = LocalDateTime.of(date, shiftStart);
-//        LocalDateTime shiftEndDateTime = LocalDateTime.of(date, shiftEnd);
-//
-//        // Handle shifts that cross midnight
-//        if (shiftEnd.isBefore(shiftStart)) {
-//            if (timeOutUtc.toLocalTime().isBefore(shiftEnd)) {
-//                shiftStartDateTime = shiftStartDateTime.minusDays(1);
-//            } else {
-//                shiftEndDateTime = shiftEndDateTime.plusDays(1);
-//            }
-//        }
-//
-//        // Parse allowed gap duration from autoTimeInAfter (format "HH:mm")
-//        String[] parts = autoTimeInAfter.split(":");
-//        int hours = Integer.parseInt(parts[0]);
-//        int minutes = Integer.parseInt(parts[1]);
-//        Duration allowedDuration = Duration.ofHours(hours).plusMinutes(minutes);
-//
-//        Duration gap = Duration.between(shiftEndDateTime, timeOutUtc);
-//
-//        if (!gap.isNegative() && gap.compareTo(allowedDuration) > 0) {
-//            // Gap exceeded → create new record for next day with timeIn = timeOut + 1 day
-//            Date nextDayTimeIn = Date.from(timeOutInstant.plusSeconds(24 * 60 * 60));
-//            createUserInOut(employee.getEmployeeId(), locationId, companyId, nextDayTimeIn);
-//            return true; // existing record not updated
-//        } else {
-//            // Within allowed gap → update existing record
-//            existingRecord.setTimeOut(timeOut);
-//            userInOutRepository.save(existingRecord);
-//            return true;
-//        }
-//    }
-
     private boolean handleTimeOutUpdate(CompanyEmployee employee, UserInOut existingRecord,
                                         Date timeOut, Integer locationId, Integer companyId) {
 

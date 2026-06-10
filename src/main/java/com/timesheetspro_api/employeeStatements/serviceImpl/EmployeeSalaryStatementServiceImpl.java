@@ -193,6 +193,7 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
 
         long totalWorkedMillis = 0;
         int penaltyAmount = 0;
+        long adjustedWorkMinutesTotal = 0;
 
         for (UserInOut userInOut : userInOutList) {
             dto.setClockInOutId(userInOut.getId());
@@ -210,7 +211,7 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
                         ? companyEmployee.getLunchBreak()
                         : 0L;
                 long adjustedWorkMinutes = Math.max(0, workMinutes - lunchBreakMinutes);
-
+                adjustedWorkMinutesTotal += adjustedWorkMinutes;
                 dailyWorkedMinutes.merge(date, adjustedWorkMinutes, Long::sum);
                 // dailyWorkedMinutes.merge(date, workMinutes, Long::sum);
                 actualWorkDays.add(date); // This adds the worked holiday (e.g., 25/03/26) to actualWorkDays
@@ -246,13 +247,9 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
                 ? companyEmployee.getCompanyShift().getTotalHours()
                 : 0;
         long totalWorkedMinutes = totalWorkedMillis / (1000 * 60);
-        System.out.printf("========= totalWorkedMinutes ======"+totalWorkedMinutes);
         int lunchDeduction = actualWorkDays.size()
                 * (companyEmployee.getLunchBreak() != null ? companyEmployee.getLunchBreak() : 0);
-        System.out.printf("======== lunchDeduction ===="+lunchDeduction);
         long netWorkedMinutes = totalWorkedMinutes - lunchDeduction;
-        System.out.printf("========= netWorkedMinutes ======"+netWorkedMinutes);
-
         float shiftMinutes = employeeShiftHours * 60L;
         int otFinalMinutes = (int) Math.max(netWorkedMinutes - shiftMinutes, 0);
         int otAmountFinal = companyEmployee.getEmployeeType().getId() != 2
@@ -269,15 +266,14 @@ public class EmployeeSalaryStatementServiceImpl implements EmployeeSalaryStateme
                 .stream().map(DeductionsDto::getAmount).reduce(0, Integer::sum);
 
         if (isHourly) {
-            double workedHoursRaw = netWorkedMinutes / 60.0;
-            System.out.printf("======== workedHoursRaw========="+workedHoursRaw);
-            double workedHours = Math.round(workedHoursRaw * 100.0) / 100.0;
+            long totalMinutes = adjustedWorkMinutesTotal;
+            long hrs = totalMinutes / 60;
+            long mins = totalMinutes % 60;
+            double workedHours = hrs + (mins / 100.0);
             double hourlyRate = companyEmployee.getHourlyRate();
             dto.setTotalWorkingHours(workedHours);
-            System.out.printf("========== workedHours ==========="+workedHours);
-            System.out.printf("========== hourlyRate ==========="+hourlyRate);
-            double payForWorked = workedHours * hourlyRate;
-            baseSalary = (int) payForWorked;
+            double payForWorked = (hrs * hourlyRate) + (mins * hourlyRate / 60.0);
+            baseSalary = (int) Math.round(payForWorked);
         } else {
             int monthlySalary = companyEmployee.getBasicSalary();
             double dailyRate = monthlySalary / 30.0; // standard 30‑day divisor
