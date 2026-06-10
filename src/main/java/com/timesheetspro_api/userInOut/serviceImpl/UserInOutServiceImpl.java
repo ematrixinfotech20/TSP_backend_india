@@ -1,12 +1,14 @@
 package com.timesheetspro_api.userInOut.serviceImpl;
 
 import com.timesheetspro_api.common.dto.UserInOut.UserInOutDto;
+import com.timesheetspro_api.common.dto.UserInOut.BulkUserInOutDto;
 import com.timesheetspro_api.common.dto.companyShiftDto.CompanyShiftDto;
 import com.timesheetspro_api.common.dto.holidayTemplateDetails.HolidayTemplateDetailsDto;
 import com.timesheetspro_api.common.model.CompanyEmployee.CompanyEmployee;
 import com.timesheetspro_api.common.model.UserInOut.UserInOut;
 import com.timesheetspro_api.common.model.companyDetails.CompanyDetails;
 import com.timesheetspro_api.common.model.companyShift.CompanyShift;
+import com.timesheetspro_api.common.model.holidayTemplateDetails.HolidayTemplateDetails;
 import com.timesheetspro_api.common.model.holidayTemplates.HolidayTemplates;
 import com.timesheetspro_api.common.model.locations.Locations;
 import com.timesheetspro_api.common.model.weeklyOff.WeeklyOff;
@@ -76,7 +78,8 @@ public class UserInOutServiceImpl implements UserInOutService {
     private HolidayTemplateDetailsService holidayTemplateDetailsService;
 
     private LocalDate parseDateString(String dateStr) {
-        if (dateStr == null) return null;
+        if (dateStr == null)
+            return null;
         // Remove any trailing time part (e.g., "25/03/2026, 16:19:57")
         if (dateStr.contains(",")) {
             dateStr = dateStr.split(",")[0].trim();
@@ -119,7 +122,8 @@ public class UserInOutServiceImpl implements UserInOutService {
     }
 
     @Override
-    public Map<String, Object> getAllEntriesGroupByUser(List<Integer> userIds, String startDate, String endDate, String timeZone, List<Integer> locationIds, List<Integer> departmentIds, Integer companyId) {
+    public Map<String, Object> getAllEntriesGroupByUser(List<Integer> userIds, String startDate, String endDate,
+            String timeZone, List<Integer> locationIds, List<Integer> departmentIds, Integer companyId) {
         try {
             ZoneId zone = ZoneId.of(timeZone);
             Instant startInstant, endInstant;
@@ -171,7 +175,8 @@ public class UserInOutServiceImpl implements UserInOutService {
             spec = spec.and(UserInOutSpecification.createdOnLessThanEqual(endUTC));
 
             // --- Fetch data from repository (unchanged) ---
-//            List<UserInOut> userInOutList = this.userInOutRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "id"));
+            // List<UserInOut> userInOutList = this.userInOutRepository.findAll(spec,
+            // Sort.by(Sort.Direction.ASC, "id"));
             List<UserInOut> userInOutList = this.userInOutRepository.findAll(spec);
 
             // --- Group by User entity (unchanged) ---
@@ -195,7 +200,8 @@ public class UserInOutServiceImpl implements UserInOutService {
                     CompanyEmployee companyEmployee = this.companyEmployeeRepository.findById(user.getEmployeeId())
                             .orElseThrow(() -> new RuntimeException("Employee not found"));
                     if (companyEmployee.getCompanyShift() != null) {
-                        CompanyShift companyShift = this.companyShiftRepository.findById(companyEmployee.getCompanyShift().getId())
+                        CompanyShift companyShift = this.companyShiftRepository
+                                .findById(companyEmployee.getCompanyShift().getId())
                                 .orElseThrow(() -> new RuntimeException("Shift not found"));
                         Float regularHours = companyShift.getTotalHours();
                         regularMinutes = regularHours != null ? Math.round(regularHours * 60) : 0;
@@ -212,11 +218,13 @@ public class UserInOutServiceImpl implements UserInOutService {
 
                 // --- Pre-fetch Holidays (unchanged) ---
                 List<String> holidayDates = new ArrayList<>();
-                List<HolidayTemplates> holidayTemplates = this.holidayTemplatesRepository.findByCompanyId(user.getCompanyDetails().getId());
+                List<HolidayTemplates> holidayTemplates = this.holidayTemplatesRepository
+                        .findByCompanyId(user.getCompanyDetails().getId());
 
                 if (holidayTemplates != null && !holidayTemplates.isEmpty()) {
                     for (HolidayTemplates template : holidayTemplates) {
-                        List<HolidayTemplateDetailsDto> dtoList = this.holidayTemplateDetailsService.getAllHolidayTemplateDetailsByTemplateId(template.getId());
+                        List<HolidayTemplateDetailsDto> dtoList = this.holidayTemplateDetailsService
+                                .getAllHolidayTemplateDetailsByTemplateId(template.getId());
                         if (dtoList != null && !dtoList.isEmpty()) {
                             for (HolidayTemplateDetailsDto dto : dtoList) {
                                 if (dto.getDate() != null && dto.getDate().length() >= 10) {
@@ -230,10 +238,10 @@ public class UserInOutServiceImpl implements UserInOutService {
                 WeeklyOff weeklyOff = user.getWeeklyOff();
 
                 // --- Initialize counters for P, A, Weekly Off, Holiday ---
-                int presentCount = 0;      // P (present on normal days)
-                int absentCount = 0;        // A (absent on normal days)
-                int weeklyOffCount = 0;     // total weekly off days (whether worked or not)
-                int holidayCount = 0;       // total holiday days (whether worked or not)
+                int presentCount = 0; // P (present on normal days)
+                int absentCount = 0; // A (absent on normal days)
+                int weeklyOffCount = 0; // total weekly off days (whether worked or not)
+                int holidayCount = 0; // total holiday days (whether worked or not)
 
                 // --- Build the "data" array for all dates in the range ---
                 List<Map<String, Object>> dataList = new ArrayList<>();
@@ -255,7 +263,8 @@ public class UserInOutServiceImpl implements UserInOutService {
                         isHoliday = true;
                     }
 
-                    // Check if the current date falls under the Weekly Off rules (only if not already a holiday)
+                    // Check if the current date falls under the Weekly Off rules (only if not
+                    // already a holiday)
                     if (!isHoliday && weeklyOff != null) {
                         DayOfWeek dayOfWeek = date.getDayOfWeek();
                         int weekOfMonth = ((date.getDayOfMonth() - 1) / 7) + 1; // Returns 1, 2, 3, 4, or 5
@@ -299,11 +308,11 @@ public class UserInOutServiceImpl implements UserInOutService {
 
                         // Determine status
                         if (isHoliday || isWeeklyOff) {
-                            status = "PW";   // Present on Weekly Off/Holiday
-                            presentCount++;  // Count only normal day present
+                            status = "PW"; // Present on Weekly Off/Holiday
+                            presentCount++; // Count only normal day present
                         } else {
-                            status = "P";    // Present on normal day
-                            presentCount++;  // Count only normal day present
+                            status = "P"; // Present on normal day
+                            presentCount++; // Count only normal day present
                         }
                     } else {
                         // Absent or incomplete day
@@ -323,12 +332,12 @@ public class UserInOutServiceImpl implements UserInOutService {
 
                         // Determine status
                         if (isWeeklyOff) {
-                            status = "W";    // Weekly Off (absent)
+                            status = "W"; // Weekly Off (absent)
                         } else if (isHoliday) {
-                            status = "H";    // Holiday (absent)
+                            status = "H"; // Holiday (absent)
                         } else {
-                            status = "A";    // Absent on normal day
-                            absentCount++;   // Count only normal day absence
+                            status = "A"; // Absent on normal day
+                            absentCount++; // Count only normal day absence
                         }
                     }
 
@@ -343,10 +352,10 @@ public class UserInOutServiceImpl implements UserInOutService {
                 userGroup.put("id", user.getEmployeeId());
                 userGroup.put("username", user.getFirstName() + " " + user.getLastName());
                 // Add the new counters right after username
-                userGroup.put("presentCount", presentCount);      // P
-                userGroup.put("absentCount", absentCount);        // A
-                userGroup.put("weeklyOffCount", weeklyOffCount);  // Weekly Off days
-                userGroup.put("holidayCount", holidayCount);      // Holiday days
+                userGroup.put("presentCount", presentCount); // P
+                userGroup.put("absentCount", absentCount); // A
+                userGroup.put("weeklyOffCount", weeklyOffCount); // Weekly Off days
+                userGroup.put("holidayCount", holidayCount); // Holiday days
                 userGroup.put("department", user.getDepartment().getDepartmentName());
                 userGroup.put("data", dataList);
                 userGroup.put("totalHours", formatMinutesToHHmm(totalGrossMinutes));
@@ -366,9 +375,10 @@ public class UserInOutServiceImpl implements UserInOutService {
     }
 
     @Override
-    public List<UserInOutDto> getAllEntriesByUserId(List<Integer> userIds, String startDate, String endDate, String timeZone, List<Integer> locationIds, List<Integer> departmentIds, Integer companyId) {
+    public List<UserInOutDto> getAllEntriesByUserId(List<Integer> userIds, String startDate, String endDate,
+            String timeZone, List<Integer> locationIds, List<Integer> departmentIds, Integer companyId) {
         try {
-//            // --- Date handling using java.time ---
+            // // --- Date handling using java.time ---
             ZoneId zone = ZoneId.of(timeZone);
             Instant startInstant, endInstant;
 
@@ -413,31 +423,32 @@ public class UserInOutServiceImpl implements UserInOutService {
             // --- Fetch raw entries (unchanged) ---
             List<UserInOut> userInOutList = this.userInOutRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "id"));
 
-//            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-//            dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-//            Date start, end;
-//            if (startDate == null || endDate == null) {
-//                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
-//                calendar.set(Calendar.DAY_OF_MONTH, 1);
-//                start = calendar.getTime();
-//                calendar.add(Calendar.MONTH, 1);
-//                calendar.set(Calendar.DAY_OF_MONTH, 0);
-//                end = calendar.getTime();
-//            }else{
-//                start = this.commonService.convertLocalToUtc(startDate, timeZone, false);
-//                end = this.commonService.convertLocalToUtc(endDate, timeZone, true);
-//            }
-//            // --- Build specification ---
-//            Specification<UserInOut> spec = UserInOutSpecification.createdOnGreaterThanEqual(start);
-//            if (userIds != null && !userIds.isEmpty()) {
-//                spec = spec.and(UserInOutSpecification.userIdIn(userIds));
-//            }
-//            if (companyId != null) {
-//                spec = spec.and(UserInOutSpecification.hasCompany(companyId));
-//            }
-//            spec = spec.and(UserInOutSpecification.createdOnLessThanEqual(end));
-//            List<UserInOut> userInOutList = this.userInOutRepository.findAll(spec, Sort.by(Sort.Direction.ASC, "id"));
-
+            // SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            // dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+            // Date start, end;
+            // if (startDate == null || endDate == null) {
+            // Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            // calendar.set(Calendar.DAY_OF_MONTH, 1);
+            // start = calendar.getTime();
+            // calendar.add(Calendar.MONTH, 1);
+            // calendar.set(Calendar.DAY_OF_MONTH, 0);
+            // end = calendar.getTime();
+            // }else{
+            // start = this.commonService.convertLocalToUtc(startDate, timeZone, false);
+            // end = this.commonService.convertLocalToUtc(endDate, timeZone, true);
+            // }
+            // // --- Build specification ---
+            // Specification<UserInOut> spec =
+            // UserInOutSpecification.createdOnGreaterThanEqual(start);
+            // if (userIds != null && !userIds.isEmpty()) {
+            // spec = spec.and(UserInOutSpecification.userIdIn(userIds));
+            // }
+            // if (companyId != null) {
+            // spec = spec.and(UserInOutSpecification.hasCompany(companyId));
+            // }
+            // spec = spec.and(UserInOutSpecification.createdOnLessThanEqual(end));
+            // List<UserInOut> userInOutList = this.userInOutRepository.findAll(spec,
+            // Sort.by(Sort.Direction.ASC, "id"));
 
             // --- Collect distinct user IDs from the entries ---
             Set<Integer> distinctUserIds = userInOutList.stream()
@@ -482,10 +493,12 @@ public class UserInOutServiceImpl implements UserInOutService {
 
                         // --- Shift DTO (unchanged) ---
                         CompanyShiftDto companyShiftDto = new CompanyShiftDto();
-                        CompanyEmployee companyEmployee = this.companyEmployeeRepository.findById(userInOut.getUser().getEmployeeId())
+                        CompanyEmployee companyEmployee = this.companyEmployeeRepository
+                                .findById(userInOut.getUser().getEmployeeId())
                                 .orElseThrow(() -> new RuntimeException("Employee not found"));
                         if (companyEmployee.getCompanyShift() != null) {
-                            CompanyShift companyShift = this.companyShiftRepository.findById(companyEmployee.getCompanyShift().getId())
+                            CompanyShift companyShift = this.companyShiftRepository
+                                    .findById(companyEmployee.getCompanyShift().getId())
                                     .orElseThrow(() -> new RuntimeException("Shift not found"));
                             companyShiftDto.setCompanyId(companyShift.getCompanyDetails().getId());
                             BeanUtils.copyProperties(companyShift, companyShiftDto);
@@ -574,13 +587,20 @@ public class UserInOutServiceImpl implements UserInOutService {
 
     public UserInOutDto getUserInOut(Long id) {
         try {
-            UserInOut userInOut = this.userInOutRepository.findById(id).orElseThrow(() -> new RuntimeException("UserInOut not found"));
+            UserInOut userInOut = this.userInOutRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("UserInOut not found"));
             UserInOutDto userInOutDto = new UserInOutDto();
             userInOutDto.setId(userInOut.getId());
             userInOutDto.setUserId(userInOut.getUser().getEmployeeId());
-            userInOutDto.setTimeIn(this.commonService.convertDateToString(userInOut.getTimeIn(), "Asia/Calcutta")); // Defaulting to IST or pass TZ?
+            userInOutDto.setTimeIn(this.commonService.convertDateToString(userInOut.getTimeIn(), "Asia/Calcutta")); // Defaulting
+                                                                                                                    // to
+                                                                                                                    // IST
+                                                                                                                    // or
+                                                                                                                    // pass
+                                                                                                                    // TZ?
             if (userInOut.getTimeOut() != null) {
-                userInOutDto.setTimeOut(this.commonService.convertDateToString(userInOut.getTimeOut(), "Asia/Calcutta"));
+                userInOutDto
+                        .setTimeOut(this.commonService.convertDateToString(userInOut.getTimeOut(), "Asia/Calcutta"));
             }
             if (userInOut.getLocations() != null) {
                 userInOutDto.setLocationId(userInOut.getLocations().getId());
@@ -673,7 +693,8 @@ public class UserInOutServiceImpl implements UserInOutService {
                 return dto;
             }
 
-            // If updated, we might also want to reflect other changes? Currently only timeOut is set.
+            // If updated, we might also want to reflect other changes? Currently only
+            // timeOut is set.
             // The original code also set user (already set) but nothing else.
             return dto;
         } catch (Exception e) {
@@ -802,7 +823,6 @@ public class UserInOutServiceImpl implements UserInOutService {
         calendar.set(Calendar.SECOND, 59);
         Date endOfDay = calendar.getTime();
 
-
         List<UserInOut> entries = userInOutRepository.findByUserIdAndToday(userId, startOfDay, endOfDay);
 
         return entries.stream().map(entry -> {
@@ -816,7 +836,8 @@ public class UserInOutServiceImpl implements UserInOutService {
     }
 
     @Transactional(readOnly = true)
-    public Map<String, Object> getTimeInOutReport(List<Integer> userIds, String startDate, String endDate, String timeZone, Integer companyId) {
+    public Map<String, Object> getTimeInOutReport(List<Integer> userIds, String startDate, String endDate,
+            String timeZone, Integer companyId) {
         try {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -843,7 +864,8 @@ public class UserInOutServiceImpl implements UserInOutService {
             }
 
             Map<Integer, String> userMap = users.stream()
-                    .collect(Collectors.toMap(CompanyEmployee::getEmployeeId, user -> user.getFirstName() + " " + user.getLastName()));
+                    .collect(Collectors.toMap(CompanyEmployee::getEmployeeId,
+                            user -> user.getFirstName() + " " + user.getLastName()));
 
             Specification<UserInOut> spec = UserInOutSpecification.createdOnGreaterThanEqual(start)
                     .and(UserInOutSpecification.createdOnLessThanEqual(end));
@@ -876,11 +898,13 @@ public class UserInOutServiceImpl implements UserInOutService {
                     Map<String, Object> dayRecord = Map.of(
                             "records", List.of(
                                     Map.of(
-                                            "timeIn", this.commonService.convertDateToString(record.getTimeIn(), timeZone),
-                                            "timeOut", record.getTimeOut() != null ? this.commonService.convertDateToString(record.getTimeOut(), timeZone) : ""
-                                    )
-                            )
-                    );
+                                            "timeIn",
+                                            this.commonService.convertDateToString(record.getTimeIn(), timeZone),
+                                            "timeOut",
+                                            record.getTimeOut() != null
+                                                    ? this.commonService.convertDateToString(record.getTimeOut(),
+                                                            timeZone)
+                                                    : "")));
 
                     monthlyRecords.computeIfAbsent(month, m -> new ArrayList<>()).add(dayRecord);
                 }
@@ -899,7 +923,8 @@ public class UserInOutServiceImpl implements UserInOutService {
         }
     }
 
-    public Workbook generateExcelReport(Map<String, Object> data, String startDateStr, String endDateStr, String timeZone) {
+    public Workbook generateExcelReport(Map<String, Object> data, String startDateStr, String endDateStr,
+            String timeZone) {
         try {
             Workbook workbook = new XSSFWorkbook();
             SimpleDateFormat jsonDateFormat = new SimpleDateFormat("MM/dd/yyyy, hh:mm:ss a");
@@ -966,7 +991,8 @@ public class UserInOutServiceImpl implements UserInOutService {
                                 List<Map<String, Object>> dataList = (List<Map<String, Object>>) record.get("data");
                                 if (dataList != null) {
                                     for (Map<String, Object> dataEntry : dataList) {
-                                        List<Map<String, Object>> timeRecords = (List<Map<String, Object>>) dataEntry.get("records");
+                                        List<Map<String, Object>> timeRecords = (List<Map<String, Object>>) dataEntry
+                                                .get("records");
                                         if (timeRecords != null) {
                                             filteredRecords.addAll(timeRecords);
                                         }
@@ -1049,11 +1075,13 @@ public class UserInOutServiceImpl implements UserInOutService {
         int startDay = 1;
         int endDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 
-        if (startDate != null && sheetStartDate.getMonth() == startDate.getMonth() && sheetStartDate.getYear() == startDate.getYear()) {
+        if (startDate != null && sheetStartDate.getMonth() == startDate.getMonth()
+                && sheetStartDate.getYear() == startDate.getYear()) {
             startDay = startDate.getDate();
         }
 
-        if (endDate != null && sheetEndDate.getMonth() == endDate.getMonth() && sheetEndDate.getYear() == endDate.getYear()) {
+        if (endDate != null && sheetEndDate.getMonth() == endDate.getMonth()
+                && sheetEndDate.getYear() == endDate.getYear()) {
             endDay = endDate.getDate();
         }
         int totalColumns = endDay - startDay + 2; // +2 for "User Name" and "Total Hours"
@@ -1116,7 +1144,9 @@ public class UserInOutServiceImpl implements UserInOutService {
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
 
         long totalMinutes = 0;
-        int startDay = sheet.getRow(2).getCell(1).getNumericCellValue() != 1 ? (int) sheet.getRow(2).getCell(1).getNumericCellValue() : 1;
+        int startDay = sheet.getRow(2).getCell(1).getNumericCellValue() != 1
+                ? (int) sheet.getRow(2).getCell(1).getNumericCellValue()
+                : 1;
         int endDay = (int) sheet.getRow(2).getCell(sheet.getRow(2).getLastCellNum() - 2).getNumericCellValue();
 
         Map<Integer, StringBuilder> dayEntries = new HashMap<>();
@@ -1126,9 +1156,10 @@ public class UserInOutServiceImpl implements UserInOutService {
                     continue;
                 }
 
-                Date timeIn = inputFormat.parse(this.commonService.convertUtcToLocal(record.get("timeIn").toString(), timeZone));
-                Date timeOut = inputFormat.parse(this.commonService.convertUtcToLocal(record.get("timeOut").toString(), timeZone));
-
+                Date timeIn = inputFormat
+                        .parse(this.commonService.convertUtcToLocal(record.get("timeIn").toString(), timeZone));
+                Date timeOut = inputFormat
+                        .parse(this.commonService.convertUtcToLocal(record.get("timeOut").toString(), timeZone));
 
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(timeIn);
@@ -1185,11 +1216,13 @@ public class UserInOutServiceImpl implements UserInOutService {
         Row newRow = sheet.createRow(lastRow + 1);
         Cell cell = newRow.createCell(0);
         cell.setCellValue(userName);
-        cell.setCellStyle(createCellStyle(sheet.getWorkbook(), true, true, true, true, 11)); // Bold, no borders, no centered, size 11
+        cell.setCellStyle(createCellStyle(sheet.getWorkbook(), true, true, true, true, 11)); // Bold, no borders, no
+                                                                                             // centered, size 11
         return lastRow + 1;
     }
 
-    private CellStyle createCellStyle(Workbook workbook, boolean isBold, boolean hasBorders, boolean isCentered, boolean isVerticallyCentered, int fontSize) {
+    private CellStyle createCellStyle(Workbook workbook, boolean isBold, boolean hasBorders, boolean isCentered,
+            boolean isVerticallyCentered, int fontSize) {
         CellStyle style = workbook.createCellStyle();
         Font font = workbook.createFont();
 
@@ -1225,7 +1258,8 @@ public class UserInOutServiceImpl implements UserInOutService {
 
     public Date parseAnyDate(String s) {
         try {
-            if (s == null || s.trim().isEmpty()) return null;
+            if (s == null || s.trim().isEmpty())
+                return null;
             s = s.trim();
 
             // 1) ISO with time (Z or offset) - e.g. 2026-01-31T08:34:45.622Z
@@ -1237,7 +1271,8 @@ public class UserInOutServiceImpl implements UserInOutService {
             if (s.matches("\\d{2}/\\d{2}/\\d{4}")) {
                 SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH);
                 f.setLenient(false);
-                // choose timezone: if this represents a "date only", usually treat it as local start-of-day
+                // choose timezone: if this represents a "date only", usually treat it as local
+                // start-of-day
                 // If you want it as UTC midnight, keep UTC.
                 f.setTimeZone(TimeZone.getTimeZone("UTC"));
                 return f.parse(s);
@@ -1263,7 +1298,7 @@ public class UserInOutServiceImpl implements UserInOutService {
     }
 
     private boolean handleTimeOutUpdate(CompanyEmployee employee, UserInOut existingRecord,
-                                        Date timeOut, Integer locationId, Integer companyId) {
+            Date timeOut, Integer locationId, Integer companyId) {
 
         String autoTimeInAfter = employee.getCompanyDetails().getAutoTimeInAfterHours();
 
@@ -1313,53 +1348,61 @@ public class UserInOutServiceImpl implements UserInOutService {
     }
 
     private boolean isWeeklyOffDay(DayOfWeek dayOfWeek, int weekOfMonth, WeeklyOff weeklyOff) {
-        if (weeklyOff == null) return false;
+        if (weeklyOff == null)
+            return false;
 
         switch (dayOfWeek) {
             case SUNDAY:
-                if (weeklyOff.isSundayAll()) return true;
+                if (weeklyOff.isSundayAll())
+                    return true;
                 return (weekOfMonth == 1 && weeklyOff.isSunday1st()) ||
                         (weekOfMonth == 2 && weeklyOff.isSunday2nd()) ||
                         (weekOfMonth == 3 && weeklyOff.isSunday3rd()) ||
                         (weekOfMonth == 4 && weeklyOff.isSunday4th()) ||
                         (weekOfMonth == 5 && weeklyOff.isSunday5th());
             case MONDAY:
-                if (weeklyOff.isMondayAll()) return true;
+                if (weeklyOff.isMondayAll())
+                    return true;
                 return (weekOfMonth == 1 && weeklyOff.isMonday1st()) ||
                         (weekOfMonth == 2 && weeklyOff.isMonday2nd()) ||
                         (weekOfMonth == 3 && weeklyOff.isMonday3rd()) ||
                         (weekOfMonth == 4 && weeklyOff.isMonday4th()) ||
                         (weekOfMonth == 5 && weeklyOff.isMonday5th());
             case TUESDAY:
-                if (weeklyOff.isTuesdayAll()) return true;
+                if (weeklyOff.isTuesdayAll())
+                    return true;
                 return (weekOfMonth == 1 && weeklyOff.isTuesday1st()) ||
                         (weekOfMonth == 2 && weeklyOff.isTuesday2nd()) ||
                         (weekOfMonth == 3 && weeklyOff.isTuesday3rd()) ||
                         (weekOfMonth == 4 && weeklyOff.isTuesday4th()) ||
                         (weekOfMonth == 5 && weeklyOff.isTuesday5th());
             case WEDNESDAY:
-                if (weeklyOff.isWednesdayAll()) return true;
+                if (weeklyOff.isWednesdayAll())
+                    return true;
                 return (weekOfMonth == 1 && weeklyOff.isWednesday1st()) ||
                         (weekOfMonth == 2 && weeklyOff.isWednesday2nd()) ||
                         (weekOfMonth == 3 && weeklyOff.isWednesday3rd()) ||
                         (weekOfMonth == 4 && weeklyOff.isWednesday4th()) ||
                         (weekOfMonth == 5 && weeklyOff.isWednesday5th());
             case THURSDAY:
-                if (weeklyOff.isThursdayAll()) return true;
+                if (weeklyOff.isThursdayAll())
+                    return true;
                 return (weekOfMonth == 1 && weeklyOff.isThursday1st()) ||
                         (weekOfMonth == 2 && weeklyOff.isThursday2nd()) ||
                         (weekOfMonth == 3 && weeklyOff.isThursday3rd()) ||
                         (weekOfMonth == 4 && weeklyOff.isThursday4th()) ||
                         (weekOfMonth == 5 && weeklyOff.isThursday5th());
             case FRIDAY:
-                if (weeklyOff.isFridayAll()) return true;
+                if (weeklyOff.isFridayAll())
+                    return true;
                 return (weekOfMonth == 1 && weeklyOff.isFriday1st()) ||
                         (weekOfMonth == 2 && weeklyOff.isFriday2nd()) ||
                         (weekOfMonth == 3 && weeklyOff.isFriday3rd()) ||
                         (weekOfMonth == 4 && weeklyOff.isFriday4th()) ||
                         (weekOfMonth == 5 && weeklyOff.isFriday5th());
             case SATURDAY:
-                if (weeklyOff.isSaturdayAll()) return true;
+                if (weeklyOff.isSaturdayAll())
+                    return true;
                 return (weekOfMonth == 1 && weeklyOff.isSaturday1st()) ||
                         (weekOfMonth == 2 && weeklyOff.isSaturday2nd()) ||
                         (weekOfMonth == 3 && weeklyOff.isSaturday3rd()) ||
@@ -1367,6 +1410,119 @@ public class UserInOutServiceImpl implements UserInOutService {
                         (weekOfMonth == 5 && weeklyOff.isSaturday5th());
             default:
                 return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public void addBulkClockInOut(BulkUserInOutDto bulkDto) {
+        try {
+            if (bulkDto == null || bulkDto.getUserId() == null || bulkDto.getUserId().isEmpty()) {
+                throw new RuntimeException("User ID list cannot be empty");
+            }
+            if (bulkDto.getStartDate() == null || bulkDto.getStartDate().isEmpty() ||
+                    bulkDto.getEndDate() == null || bulkDto.getEndDate().isEmpty()) {
+                throw new RuntimeException("Start date and End date are required");
+            }
+
+            Date start = parseAnyDate(bulkDto.getStartDate());
+            Date end = parseAnyDate(bulkDto.getEndDate());
+
+            if (start == null || end == null) {
+                throw new RuntimeException("Start date and End date are invalid");
+            }
+
+            ZoneId utcZone = ZoneId.of("UTC");
+            LocalDate startLocal = start.toInstant().atZone(utcZone).toLocalDate();
+            LocalDate endLocal = end.toInstant().atZone(utcZone).toLocalDate();
+
+            if (startLocal.isAfter(endLocal)) {
+                throw new RuntimeException("Start date cannot be after End date");
+            }
+
+            Date timeInDate = parseAnyDate(bulkDto.getTimeIn());
+            Date timeOutDate = (bulkDto.getTimeOut() != null && !bulkDto.getTimeOut().isEmpty())
+                    ? parseAnyDate(bulkDto.getTimeOut())
+                    : null;
+
+            if (timeInDate == null) {
+                throw new RuntimeException("Time In is required");
+            }
+
+            ZonedDateTime baseTimeIn = timeInDate.toInstant().atZone(utcZone);
+            ZonedDateTime baseTimeOut = timeOutDate != null ? timeOutDate.toInstant().atZone(utcZone) : null;
+            Duration duration = baseTimeOut != null ? Duration.between(baseTimeIn, baseTimeOut) : null;
+
+            CompanyDetails companyDetails = this.companyDetailsRepository.findById(bulkDto.getCompanyId())
+                    .orElseThrow(() -> new RuntimeException("Company not found"));
+
+            for (Integer userId : bulkDto.getUserId()) {
+                CompanyEmployee companyEmployee = this.companyEmployeeRepository.findById(userId)
+                        .orElseThrow(() -> new RuntimeException("Employee not found for id: " + userId));
+
+                WeeklyOff weeklyOff = null;
+                if (companyEmployee.getWeeklyOff() != null) {
+                    weeklyOff = this.weeklyOffRepository.findById(companyEmployee.getWeeklyOff().getId())
+                            .orElse(null);
+                }
+
+                List<String> holidayDates = new ArrayList<>();
+                if (companyEmployee.getHolidayTemplates() != null) {
+                    List<HolidayTemplateDetailsDto> dtoList = this.holidayTemplateDetailsService
+                            .getAllHolidayTemplateDetailsByTemplateId(companyEmployee.getHolidayTemplates().getId());
+                    if (dtoList != null && !dtoList.isEmpty()) {
+                        for (HolidayTemplateDetailsDto dto : dtoList) {
+                            if (dto.getDate() != null && dto.getDate().length() >= 10) {
+                                holidayDates.add(dto.getDate().substring(0, 10));
+                            }
+                        }
+                    }
+                }
+
+                for (LocalDate date = startLocal; !date.isAfter(endLocal); date = date.plusDays(1)) {
+                    String formattedDate = date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    if (!holidayDates.isEmpty() && holidayDates.contains(formattedDate)) {
+                        continue;
+                    }
+
+                    if (weeklyOff != null) {
+                        DayOfWeek dayOfWeek = date.getDayOfWeek();
+                        int weekOfMonth = ((date.getDayOfMonth() - 1) / 7) + 1;
+                        if (isWeeklyOffDay(dayOfWeek, weekOfMonth, weeklyOff)) {
+                            continue;
+                        }
+                    }
+
+                    UserInOut userInOut = new UserInOut();
+
+                    userInOut.setUser(companyEmployee);
+                    userInOut.setCompanyDetails(companyDetails);
+                    userInOut.setIsSalaryGenerate(0);
+
+                    ZonedDateTime newTimeIn = baseTimeIn.withYear(date.getYear())
+                            .withMonth(date.getMonthValue())
+                            .withDayOfMonth(date.getDayOfMonth());
+
+                    ZonedDateTime newTimeOut = null;
+                    if (baseTimeOut != null) {
+                        newTimeOut = newTimeIn.plus(duration);
+                    }
+
+                    userInOut.setTimeIn(Date.from(newTimeIn.toInstant()));
+                    if (newTimeOut != null) {
+                        userInOut.setTimeOut(Date.from(newTimeOut.toInstant()));
+                    } else {
+                        userInOut.setTimeOut(null);
+                    }
+
+                    userInOut.setCreatedOn(Date.from(newTimeIn.toInstant()));
+
+                    this.userInOutRepository.save(userInOut);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 }

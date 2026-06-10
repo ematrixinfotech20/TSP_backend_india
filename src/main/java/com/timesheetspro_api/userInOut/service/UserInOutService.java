@@ -1,6 +1,7 @@
 package com.timesheetspro_api.userInOut.service;
 
 import com.timesheetspro_api.common.dto.UserInOut.UserInOutDto;
+import com.timesheetspro_api.common.dto.UserInOut.BulkUserInOutDto;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.data.domain.Pageable;
 
@@ -35,6 +36,8 @@ public interface UserInOutService {
     String clickInOut(int userId, Integer locationId,Integer companyId);
 
     UserInOutDto addClockInOut(UserInOutDto userInOutDto);
+
+    void addBulkClockInOut(BulkUserInOutDto bulkDto);
 
     void deleteUserInOut(Long id);
 

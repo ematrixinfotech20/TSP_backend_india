@@ -2,6 +2,7 @@ package com.timesheetspro_api.userInOut.controller;
 
 import com.timesheetspro_api.auth.config.JwtTokenUtil;
 import com.timesheetspro_api.common.dto.UserInOut.UserInOutDto;
+import com.timesheetspro_api.common.dto.UserInOut.BulkUserInOutDto;
 import com.timesheetspro_api.common.response.ApiResponse;
 import com.timesheetspro_api.userInOut.service.UserInOutService;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -257,6 +258,22 @@ public class UserInOutController {
             );
         } catch (Exception e) {
             return new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Fail to create userInOut", resBody);
+        }
+    }
+
+    @PostMapping("/addBulk")
+    public ApiResponse<?> addBulkClockInOut(@RequestBody BulkUserInOutDto bulkDto) {
+        Map<String, Object> resBody = new HashMap<>();
+        try {
+            this.userInOutService.addBulkClockInOut(bulkDto);
+            return new ApiResponse<>(
+                    HttpStatus.CREATED.value(),
+                    "Bulk UserInOut added successfully",
+                    ""
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ApiResponse<>(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Fail to bulk create userInOut", resBody);
         }
     }
 
