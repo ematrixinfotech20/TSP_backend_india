@@ -14,14 +14,16 @@ import java.util.List;
 public interface UserInOutRepository extends JpaRepository<UserInOut, Long>, JpaSpecificationExecutor<UserInOut> {
     @Query("SELECT u FROM UserInOut u WHERE (:userId IS NULL OR u.user.id = :userId) AND u.timeOut BETWEEN :startOfDay AND :endOfDay")
     List<UserInOut> findByUserIdAndToday(@Param("userId") int userId,
-                                         @Param("startOfDay") Date startOfDay,
-                                         @Param("endOfDay") Date endOfDay);
+            @Param("startOfDay") Date startOfDay,
+            @Param("endOfDay") Date endOfDay);
 
     @Query("SELECT COUNT(DISTINCT u.user.id) FROM UserInOut u WHERE u.companyDetails.id=:id AND u.timeIn IS NOT NULL AND u.timeIn BETWEEN :startOfDay AND :endOfDay")
-    long countCheckedInUsers(@Param("id") int id, @Param("startOfDay") Date startOfDay, @Param("endOfDay") Date endOfDay);
+    long countCheckedInUsers(@Param("id") int id, @Param("startOfDay") Date startOfDay,
+            @Param("endOfDay") Date endOfDay);
 
     @Query("SELECT COUNT(DISTINCT u.user.id) FROM UserInOut u WHERE u.companyDetails.id=:id AND u.timeOut BETWEEN :startOfDay AND :endOfDay")
-    long countCheckedOutUsers(@Param("id") int id,@Param("startOfDay") Date startOfDay, @Param("endOfDay") Date endOfDay);
+    long countCheckedOutUsers(@Param("id") int id, @Param("startOfDay") Date startOfDay,
+            @Param("endOfDay") Date endOfDay);
 
     @Query("SELECT u FROM UserInOut u WHERE u.timeOut IS NULL AND u.user.id=:userId")
     UserInOut getLastRecord(@Param("userId") int userId);
@@ -31,4 +33,7 @@ public interface UserInOutRepository extends JpaRepository<UserInOut, Long>, Jpa
 
     @Query("SELECT u FROM UserInOut u WHERE u.timeOut IS NULL AND u.user.id=:userId")
     UserInOut getCurrentUserRecord(@Param("userId") int userId);
+
+    @Query("SELECT u FROM UserInOut u WHERE (:userId IS NULL OR u.user.id = :userId) AND u.createdOn BETWEEN :startDate AND :endDate")
+    List<UserInOut> findByUserIdAndDateRange(@Param("userId") int userId, @Param("startDate") Date startDate, @Param("endDate") Date endDate);
 }

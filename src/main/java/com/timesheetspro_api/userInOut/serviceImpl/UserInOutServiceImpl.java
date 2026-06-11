@@ -1494,6 +1494,10 @@ public class UserInOutServiceImpl implements UserInOutService {
                     }
 
                     UserInOut userInOut = new UserInOut();
+                    Date startDate = Date.from(date.atStartOfDay(utcZone).toInstant());
+                    Date endDate = Date.from(date.atTime(LocalTime.MAX).atZone(utcZone).toInstant());
+                    List<UserInOut> existingRecords = this.userInOutRepository
+                            .findByUserIdAndDateRange(companyEmployee.getEmployeeId(), startDate, endDate);
 
                     userInOut.setUser(companyEmployee);
                     userInOut.setCompanyDetails(companyDetails);
@@ -1516,8 +1520,9 @@ public class UserInOutServiceImpl implements UserInOutService {
                     }
 
                     userInOut.setCreatedOn(Date.from(newTimeIn.toInstant()));
-
-                    this.userInOutRepository.save(userInOut);
+                    if (existingRecords.isEmpty()) {
+                        this.userInOutRepository.save(userInOut);
+                    }
                 }
             }
         } catch (Exception e) {
